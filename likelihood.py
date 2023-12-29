@@ -1,10 +1,10 @@
 import numpy as np
 from scipy.optimize import minimize, Bounds
-from random import random
 from scipy.stats import beta
 
 
 def get_win_odds(player_weaknesses, players):
+    
     win_odds = 1
     for player in players:
         weakness = player_weaknesses[player]
@@ -13,7 +13,7 @@ def get_win_odds(player_weaknesses, players):
     
 
 def get_log_likelihood(player_weaknesses, gamedata, prior_params):
-    prior = get_prior(player_weaknesses, prior_params)
+    prior = get_prior_surprise(player_weaknesses, prior_params)
     log_likelihood = 0
     for game in gamedata:
         players = game["users"]
@@ -25,26 +25,23 @@ def get_log_likelihood(player_weaknesses, gamedata, prior_params):
             log_likelihood -= np.log(1 - win_odds)
     return log_likelihood + prior
 
-def get_prior(player_weaknesses, prior_params):
+def get_prior_surprise(player_weaknesses, prior_params):
     surprise = 0
     for weakness in player_weaknesses.values():
         surprise = surprise - np.log(beta.pdf(weakness, prior_params[0], prior_params[1]))
     return surprise
 
-def find_weaknesses(data, players, prior, initial_guess = None):
-    if initial_guess == None:
-        initial_guess = np.array([0.5 for i, _ in enumerate(players)])
+def find_weaknesses(data, players, prior_params, initial_guess = None):
+    if initial_guess is None:
+        initial_guess = np.array([0.5 for _ in players])
     bounds = Bounds(lb=0.000001, ub=0.99999, keep_feasible=True)
-    def convert_to_dict(guess_list):
-        guess_dict = {}
-        for player, guess in zip(players, guess_list[0]):
-            guess_dict[player] = guess
-        return guess_dict
 
-    def get_odds(*args):
-        player_weaknesses = convert_to_dict(args)
-        odds = get_log_likelihood(player_weaknesses, data, prior)
-        return odds
+    def get_odds(guess_list):
+        player_weaknesses = {}
+        for player, guess in zip(players, guess_list):
+            player_weaknesses[player] = guess
+        return get_log_likelihood(player_weaknesses, data, prior_params)
+
     result = minimize(get_odds, initial_guess, bounds=bounds)
     
     ratings = {}
@@ -57,10 +54,10 @@ def find_prior(weaknesses, initial_guess = None):
     def get_surprise(params):
         surprise = 0
         for weakness in weaknesses:
-            surprise = surprise - np.log(beta.pdf(weakness, params[0], params[1]))
+            surprise = surprise - np.log(beta.pdf(weakness, params[0], 3 - params[0]))
         return surprise
-    if initial_guess == None:
-        initial_guess = np.array([2, 2])
-    bounds = Bounds(lb=1.0, ub=100.0, keep_feasible=True)
+    if initial_guess is None:
+        initial_guess = np.array([2])
+    bounds = Bounds(lb=1.00001, ub=2.99999, keep_feasible=True)
     optimized_prior = minimize(get_surprise, initial_guess, bounds=bounds).x
     return optimized_prior

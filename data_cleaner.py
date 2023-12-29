@@ -9,11 +9,11 @@ class Filter:
     def __init__(self):
         pass
 
-    def validate(self, obj):
+    def validate(self, data):
         return True
     
 
-class ItemFilter(Filter):
+class ExactItemFilter(Filter):
     def __init__(self, key, value):
         self.key = key
         self.value = value
@@ -24,7 +24,7 @@ class ItemFilter(Filter):
             if data[self.key] == self.value:
                 return True
         except KeyError:
-            logging.warning(f"No key {self.key} found!")
+            logging.warning("No key %s found!", self.key)
             
         return False
 
@@ -40,7 +40,7 @@ class AndFilter(Filter):
         return True
 
 def make_filter(player_count, variant):
-    player_count_filter = ItemFilter("num_players", player_count)
-    variant_filter = ItemFilter("variant_id", variant)
+    player_count_filter = ExactItemFilter("num_players", player_count)
+    variant_filter = ExactItemFilter("variant_id", variant)
     return AndFilter([player_count_filter, variant_filter])
 
