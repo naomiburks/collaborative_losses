@@ -3,8 +3,6 @@ import logging
 def filter_games(league_data, game_filter):
     return [game_data for game_data in league_data if game_filter.validate(game_data)]
     
-
-
 class Filter:
     def __init__(self):
         pass
@@ -12,7 +10,6 @@ class Filter:
     def validate(self, data):
         return True
     
-
 class ExactItemFilter(Filter):
     def __init__(self, key, value):
         self.key = key

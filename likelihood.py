@@ -54,7 +54,7 @@ def find_prior(weaknesses, initial_guess = None):
     def get_surprise(params):
         surprise = 0
         for weakness in weaknesses:
-            surprise = surprise - np.log(beta.pdf(weakness, params[0], 3 - params[0]))
+            surprise = surprise - np.log(beta.pdf(weakness, params[0], 2.5 - params[0]))
         return surprise
     if initial_guess is None:
         initial_guess = np.array([2])

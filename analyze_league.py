@@ -12,10 +12,11 @@ from data_cleaner import make_filter, filter_games
 from likelihood import find_weaknesses, find_prior
 
 
+prior_params = [1.1, 1.5]
+
 league_data = extract_league_data()
 standard_filter = make_filter(player_count=3, variant=0)
 filtered_data = filter_games(league_data, standard_filter)
-
 users = {}
 for game in filtered_data:
     for user, user_id in zip(game["users"], game["user_ids"]):
@@ -31,14 +32,7 @@ for game in filtered_data:
 
 players = sorted(users.values(), key=lambda player:game_counts[player], reverse=True)
 
-prior_params = [2, 2]
-for i in range(4):
-    print(f"running iteration {i + 1}")
-    result = find_weaknesses(filtered_data, players, prior_params)
-    prior_param = find_prior(result.values())[0]
-    prior_params = [prior_param, 3 - prior_param] 
-    print(result)
-    print(prior_params)
+result = find_weaknesses(filtered_data, players, prior_params)
 for player in players:
     game_count = game_counts[player]
     if game_count == 1:
